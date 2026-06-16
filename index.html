@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>少帥交易日誌</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--primary:#8BA4B8;--primary-light:#A8BCCF;--success:#8FAF8F;--danger:#BF9B9B;--warning:#C4B49B;--info:#8FB4C4;--dark:#2A2E3A;--darker:#1E222C;--light:#C8C4BC;--light-muted:#9B9590;--light-dim:#6B6560;--card-bg:#2A2E3A;--border-color:#3D424E;--profit:#9CB89F;--loss:#C49B9B;--placeholder:#6B6560}
+*{color:var(--light)}
+body{background:linear-gradient(135deg,var(--darker) 0%,var(--dark) 100%);font-family:'Segoe UI','Microsoft JhengHei',sans-serif;min-height:100vh}
+.text-muted{color:var(--light-muted)!important}
+.card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.card-header{background:linear-gradient(135deg,#333845 0%,var(--card-bg) 100%);border-bottom:1px solid var(--border-color);border-radius:12px 12px 0 0!important;padding:1rem 1.5rem}
+.stats-card{background:linear-gradient(135deg,var(--card-bg) 0%,rgba(42,46,58,.8) 100%);border:1px solid var(--border-color);border-radius:10px;padding:1.25rem;transition:transform .3s,box-shadow .3s}
+.stats-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.4)}
+.stats-icon{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.stats-value{font-size:1.75rem;font-weight:700;color:#FFFFFF}
+.stats-card p{color:var(--light-muted)}
+.profit,.text-success{color:var(--profit)!important}
+.loss,.text-danger{color:var(--loss)!important}
+.badge-win{background:linear-gradient(135deg,var(--success),#7A9A7A)!important;color:#1E222C!important}
+.badge-loss{background:linear-gradient(135deg,var(--danger),#A88686)!important;color:#1E222C!important}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#758FA4);border:none;color:#1E222C;padding:.6rem 1.5rem;border-radius:8px;font-weight:600}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#A58686);border:none;color:#1E222C}
+.btn-secondary{background:linear-gradient(135deg,#4A4E5A,#3D424E);border:none;color:var(--light)}
+.btn-outline-secondary{border-color:var(--border-color);color:var(--light-muted)}
+.btn-outline-light{border-color:var(--light-muted);color:var(--light-muted)}
+.btn-outline-danger{border-color:var(--danger);color:var(--danger)}
+.form-control,.form-select{background:rgba(42,46,58,.8);border:1px solid var(--border-color);color:#FFFFFF;border-radius:8px}
+.form-control:focus,.form-select:focus{background:rgba(42,46,58,.9);border-color:var(--primary);box-shadow:0 0 0 .2rem rgba(139,164,184,.25);color:#FFFFFF}
+.form-control::placeholder{color:var(--placeholder)}
+.form-label{color:var(--light-muted);font-weight:500}
+.table{color:var(--light)}
+.table thead th{background:rgba(61,66,78,.5);border-bottom:2px solid var(--border-color);font-weight:600;text-transform:uppercase;font-size:.8rem;letter-spacing:.5px;color:#FFFFFF}
+.table tbody tr{border-bottom:1px solid var(--border-color);transition:background-color .2s}
+.table tbody tr:hover{background:rgba(61,66,78,.3)}
+.table td{color:#FFFFFF;border-color:var(--border-color)}
+.upload-zone{border:2px dashed var(--border-color);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .3s;background:rgba(42,46,58,.5);color:var(--light-muted)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:rgba(139,164,184,.1)}
+.image-thumb{position:relative;display:inline-block;margin:0.5rem}
+.image-thumb img{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border-color)}
+.image-thumb .remove-img{position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:var(--danger);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer}
+.chart-container{position:relative;height:300px}
+.trade-image{width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer}
+.modal-content{background:var(--card-bg);border:1px solid var(--border-color)}
+.modal-header{border-bottom:1px solid var(--border-color);color:#FFFFFF}
+.modal-footer{border-top:1px solid var(--border-color)}
+.btn-close-white{filter:invert(70%) sepia(10%) saturate(0) hue-rotate(180deg) brightness(200%) contrast(90%)}
+.navbar-dark{background:rgba(30,34,44,.95)!important}
+.navbar-brand{color:#FFFFFF!important}
+.nav-link{color:var(--light-muted)!important}
+.nav-link:hover,.nav-link.active{color:var(--primary)!important}
+.ratio-display{font-size:1.1rem;font-weight:700}
+small{color:var(--light-muted)}
+h5,h6,.card-title{color:#FFFFFF!important}
+label,.form-label{color:var(--light-muted)}
+@media(max-width:768px){.stats-card{padding:1rem}.stats-value{font-size:1.25rem}}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--darker)}
+::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:4px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:1060}
+.hidden-input{display:none}
+.trade-detail-card{background:linear-gradient(135deg,rgba(42,46,58,.9),rgba(30,34,44,.9));border:1px solid var(--border-color);border-radius:12px;padding:1.5rem;margin-bottom:1rem;transition:transform .2s,box-shadow .2s}
+.trade-detail-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.trade-detail-card.win{border-left:4px solid var(--profit)}
+.trade-detail-card.loss{border-left:4px solid var(--loss)}
+.order-number{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#758FA4);color:#1E222C;font-weight:700;font-size:1.1rem}
+.order-number.win{background:linear-gradient(135deg,var(--success),#7A9A7A)}
+.order-number.loss{background:linear-gradient(135deg,var(--danger),#A88686)}
+.price-box{background:rgba(42,46,58,.5);border:1px solid var(--border-color);border-radius:8px;padding:.75rem;height:100%;min-height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.price-box.entry{background:linear-gradient(135deg,rgba(143,175,143,.15),rgba(143,175,143,.05));border-color:rgba(143,175,143,.3)}
+.price-box.exit{background:linear-gradient(135deg,rgba(196,155,155,.15),rgba(196,155,155,.05));border-color:rgba(196,155,155,.3)}
+.price-box.sl{background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05));border-color:rgba(239,68,68,.3)}
+.price-box.pos{background:linear-gradient(135deg,rgba(139,164,184,.15),rgba(139,164,184,.05));border-color:rgba(139,164,184,.3)}
+.price-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--light-muted);margin-bottom:.25rem;white-space:nowrap}
+.price-value{font-size:1.1rem;font-weight:700;color:#FFFFFF;white-space:nowrap}
+.price-sub{font-size:.75rem;color:var(--light-muted)}
+.trade-screenshot{max-width:100%;max-height:250px;border-radius:8px;cursor:pointer;border:1px solid var(--border-color);margin:0.25rem}
+.notes-box{background:rgba(42,46,58,.5);border:1px solid var(--border-color);border-radius:8px;padding:1rem;font-size:.9rem;line-height:1.6}
+.rr-positive{color:var(--profit)!important;font-weight:700}
+.rr-negative{color:var(--loss)!important;font-weight:700}
+.withdrawal-item{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:.5rem 1rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.delete-withdrawal{cursor:pointer;color:var(--loss);opacity:.7}
+.gallery-images{display:flex;flex-wrap:wrap;gap:0.5rem}
+.section-title{color:#FFFFFF!important;font-weight:600}
+.toggle-switch{position:relative;display:inline-block;width:40px;height:22px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#4A4E5A;transition:.3s;border-radius:22px}
+.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%}
+input:checked+.toggle-slider{background-color:var(--primary)}
+input:checked+.toggle-slider:before{transform:translateX(18px)}
+
+/* === 之前已修改的部分 === */
+/* 交易方向「自動判定」格子改為完全透明 */
+#direction.form-select {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* 交易記錄表格整體改為透明 */
+#trades .table,
+#trades .table thead th,
+#trades .table tbody tr,
+#trades .table td {
+    background: transparent !important;
+}
+#trades .table thead th {
+    background: transparent !important;
+}
+#trades .table tbody tr {
+    background: transparent !important;
+}
+#trades .table tbody tr:hover {
+    background: rgba(61,66,78,.3) !important;
+}
+
+/* === 新增：讓「期望值」與「連續盈虧」格子高度與旁邊一致 === */
+.stats-card.h-100 {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+}
+.stats-card.h-100 > * {
+    flex: 1 1 auto;
+}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<input type="file" id="importFileInput" class="hidden-input" accept=".json" onchange="handleImportFile(event)">
+<nav class="navbar navbar-expand-lg navbar-dark mb-4" style="background:rgba(30,34,44,.95)">
+<div class="container-fluid">
+<a class="navbar-brand fw-bold" href="#"><i class="fas fa-chart-line" style="color:var(--primary)"></i> 少帥交易日誌</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="navbarNav">
+<ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link active" href="#dashboard"><i class="fas fa-tachometer-alt me-1"></i> 總覽</a></li>
+<li class="nav-item"><a class="nav-link" href="#trades"><i class="fas fa-list me-1"></i> 交易記錄</a></li>
+<li class="nav-item"><a class="nav-link" href="#statistics"><i class="fas fa-chart-bar me-1"></i> 統計分析</a></li>
+<li class="nav-item"><a class="nav-link" href="#tradeDetails"><i class="fas fa-images me-1"></i> 交易詳情</a></li>
+</ul>
+<div class="d-flex align-items-center gap-3">
+<div class="d-flex align-items-center gap-2"><span class="text-muted small"><i class="fas fa-coins me-1"></i>本金:</span><input type="number" class="form-control form-control-sm" style="width:100px" id="initialBalance" value="100000" onchange="updateInitialBalance()"></div>
+<div class="d-flex align-items-center gap-2"><span class="text-muted small"><i class="fas fa-arrow-right me-1"></i>出金:</span><span class="fw-bold" style="color:var(--loss)" id="totalWithdrawals">$0</span></div>
+<div class="d-flex align-items-center gap-2"><span class="text-muted small"><i class="fas fa-wallet me-1"></i>餘額:</span><span class="fw-bold" style="color:var(--profit)" id="totalBalance">$100,000</span></div>
+</div>
+<div class="btn-group ms-3">
+<button class="btn btn-outline-light btn-sm" onclick="triggerImport()" title="導入"><i class="fas fa-file-import me-1"></i> 導入</button>
+<button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"><i class="fas fa-download me-1"></i> 匯出</button>
+<ul class="dropdown-menu dropdown-menu-end">
+<li><a class="dropdown-item" href="#" onclick="exportData('replace')"><i class="fas fa-file-export me-2"></i>匯出並替換</a></li>
+<li><a class="dropdown-item" href="#" onclick="exportData('backup')"><i class="fas fa-archive me-2"></i>純粹備份</a></li>
+</ul>
+<button class="btn btn-outline-danger btn-sm" onclick="showWithdrawalModal()" title="出金"><i class="fas fa-arrow-right me-1"></i>出金</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="resetAll()" title="重置所有資料"><i class="fas fa-redo me-1"></i>重置</button>
+</div>
+</div>
+</div>
+</nav>
+<div class="container-fluid px-4">
+<div class="row g-3 mb-4" id="dashboard">
+<div class="col-md-6 col-lg-3"><div class="stats-card"><div class="d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 small text-uppercase">總盈虧</p><h3 class="stats-value mb-0" style="color:var(--profit)" id="totalPnL">$0</h3><small id="pnlPercent" class="text-muted">0%</small></div><div class="stats-icon" style="background:rgba(143,175,143,.2);color:var(--success)"><i class="fas fa-dollar-sign"></i></div></div></div></div>
+<div class="col-md-6 col-lg-3"><div class="stats-card"><div class="d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 small text-uppercase">勝率</p><h3 class="stats-value mb-0" id="winRate">0%</h3><small id="winLossCount" class="text-muted">0勝 0敗</small></div><div class="stats-icon" style="background:rgba(143,180,196,.2);color:var(--info)"><i class="fas fa-percentage"></i></div></div></div></div>
+<div class="col-md-6 col-lg-3"><div class="stats-card"><div class="d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 small text-uppercase">平均盈虧比</p><h3 class="stats-value mb-0" id="avgRiskReward">0R</h3><small class="text-muted">平均盈利 ÷ 平均虧損</small></div><div class="stats-icon" style="background:rgba(196,180,155,.2);color:var(--warning)"><i class="fas fa-balance-scale"></i></div></div></div></div>
+<div class="col-md-6 col-lg-3"><div class="stats-card"><div class="d-flex justify-content-between align-items-center"><div><p class="text-muted mb-1 small text-uppercase">夏普比率</p><h3 class="stats-value mb-0" id="sharpeRatio">0.00</h3><small id="maxDrawdown" class="text-muted">最大回撤: 0%</small></div><div class="stats-icon" style="background:rgba(139,164,184,.2);color:var(--primary)"><i class="fas fa-chart-area"></i></div></div></div></div>
+</div>
+<div class="row g-3 mb-4">
+<!-- 總交易次數 -->
+<div class="col-md-6 col-lg-3"><div class="stats-card h-100"><p class="text-muted mb-1 small text-uppercase">總交易次數</p><h3 class="mb-2" id="totalTrades">0</h3><div class="d-flex justify-content-between small"><span style="color:var(--profit)">平均獲利: <span id="avgWin">$0</span></span><span style="color:var(--loss)">平均虧損: <span id="avgLoss">$0</span></span></div></div></div>
+<!-- 期望值 -->
+<div class="col-md-6 col-lg-3"><div class="stats-card h-100"><p class="text-muted mb-1 small text-uppercase">期望值</p><h3 class="mb-2" id="expectancy">$0</h3><div class="progress" style="height:6px"><div class="progress-bar" id="expectancyBar" style="width:50%;background:var(--success)"></div></div></div></div>
+<!-- 利潤因子 -->
+<div class="col-md-6 col-lg-3"><div class="stats-card h-100"><p class="text-muted mb-1 small text-uppercase">利潤因子</p><h3 class="mb-2" id="profitFactor">0.00</h3><small class="text-muted">總獲利 / 總虧損</small></div></div>
+<!-- 連續盈虧 -->
+<div class="col-md-6 col-lg-3"><div class="stats-card h-100"><p class="text-muted mb-1 small text-uppercase">連續盈虧</p><div class="d-flex justify-content-between"><div><span style="color:var(--profit)">最高連勝: <span id="maxWinStreak">0</span></span></div><div><span style="color:var(--loss)">最高連敗: <span id="maxLossStreak">0</span></span></div></div></div></div>
+</div>
+<div class="row g-3 mb-4">
+<div class="col-lg-8"><div class="card h-100"><div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0 section-title"><i class="fas fa-chart-area me-2" style="color:var(--primary)"></i>權益曲線</h5><div class="d-flex align-items-center gap-2"><label class="d-flex align-items-center gap-1 small text-muted"><span>真實餘額</span><label class="toggle-switch"><input type="checkbox" id="showRealBalance" checked onchange="updateChartVisibility()"><span class="toggle-slider"></span></label></label><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-secondary active" onclick="updateChart('all')">全部</button><button type="button" class="btn btn-outline-secondary" onclick="updateChart('month')">本月</button><button type="button" class="btn btn-outline-secondary" onclick="updateChart('week')">本週</button></div></div></div><div class="card-body"><div class="chart-container"><canvas id="equityChart"></canvas></div></div></div></div>
+<div class="col-lg-4"><div class="card h-100"><div class="card-header"><h5 class="mb-0 section-title"><i class="fas fa-pie-chart me-2" style="color:var(--info)"></i>交易分析</h5></div><div class="card-body"><div class="chart-container" style="height:250px"><canvas id="winLossChart"></canvas></div><div class="row text-center mt-3"><div class="col-6"><div class="p-3 rounded"><div style="font-weight:bold;color:var(--profit)" id="totalWins">0</div><small>獲利交易</small></div></div><div class="col-6"><div class="p-3 rounded"><div style="font-weight:bold;color:var(--loss)" id="totalLosses">0</div><small>虧損交易</small></div></div></div></div></div></div>
+</div>
+<div class="card mb-4" id="addTradeSection">
+<div class="card-header"><h5 class="mb-0 section-title"><i class="fas fa-plus-circle me-2" style="color:var(--success)"></i>新增交易記錄</h5></div>
+<div class="card-body">
+<form id="tradeForm">
+<div class="row g-4">
+<div class="col-md-3"><label class="form-label">交易品種 *</label><select class="form-select" id="symbol" required><option value="">選擇品種</option><option value="BTC/USD">BTC/USD</option><option value="ETH/USD">ETH/USD</option><option value="EUR/USD">EUR/USD</option><option value="GBP/USD">GBP/USD</option><option value="USD/JPY">USD/JPY</option><option value="GOLD">GOLD</option><option value="OIL">OIL</option><option value="NAS100">NAS100</option><option value="其他">其他</option></select></div>
+<div class="col-md-3"><label class="form-label">交易方向</label><select class="form-select" id="direction" disabled><option value="">自動判定</option><option value="long">做多 (Long)</option><option value="short">做空 (Short)</option></select><small class="text-muted d-block">*自動根據價格判定</small></div>
+<div class="col-md-3"><label class="form-label">交易類型 *</label><select class="form-select" id="tradeType" required><option value="">選擇類型</option><option value="日内">日內交易</option><option value="波段">波段交易</option><option value="長線">長線持有</option><option value="套利">套利</option></select></div>
+<div class="col-md-3"><label class="form-label">交易日期 *</label><input type="date" class="form-control" id="tradeDate" required></div>
+<div class="col-md-3"><label class="form-label">進場價格 *</label><input type="number" step="0.00001" class="form-control" id="entryPrice" placeholder="0.00" required oninput="autoCalculate()"></div>
+<div class="col-md-3"><label class="form-label">出场價格 *</label><input type="number" step="0.00001" class="form-control" id="exitPrice" placeholder="0.00" required oninput="autoCalculate()"></div>
+<div class="col-md-3"><label class="form-label">止損價格 *</label><input type="number" step="0.00001" class="form-control" id="stopLoss" placeholder="0.00" required oninput="autoCalculate()"></div>
+<div class="col-md-3"><label class="form-label">進場時間</label><input type="time" class="form-control" id="entryTime" placeholder="00:00"></div>
+<div class="col-md-3"><label class="form-label">出场時間</label><input type="time" class="form-control" id="exitTime" placeholder="00:00"></div>
+<div class="col-md-3"><label class="form-label">倉位大小 *</label><input type="number" step="0.01" class="form-control" id="positionSize" placeholder="0.00" required oninput="autoCalculate()"></div>
+<div class="col-md-3"><label class="form-label">槓桿倍數</label><input type="number" class="form-control" id="leverage" value="1" min="1" max="100" oninput="autoCalculate()"></div>
+<div class="col-md-3"><label class="form-label">盈虧比 (R:R)</label><input type="text" class="form-control" id="riskRewardRatio" readonly placeholder="自動計算" style="font-weight:700"></div>
+<div class="col-md-6"><label class="form-label">交易筆記</label><textarea class="form-control" id="notes" rows="3" placeholder="記錄交易策略、進場理由、風險管理等..."></textarea></div>
+<div class="col-md-6"><label class="form-label">交易截圖上傳 (可多選)</label><div class="upload-zone" id="uploadZone" onclick="document.getElementById('tradeImage').click()"><i class="fas fa-cloud-upload-alt fa-2x mb-2"></i><p class="mb-0">點擊上傳或拖曳圖片到此處</p><small>支援 JPG, PNG 格式，可上傳多張</small><input type="file" id="tradeImage" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event)"><div id="imagePreview" class="gallery-images"></div></div></div>
+</div>
+<div class="mt-4 text-end"><button type="button" class="btn btn-secondary me-2" onclick="resetForm()"><i class="fas fa-undo me-1"></i> 重置</button><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> 儲存交易</button></div>
+</form>
+</div>
+</div>
+<div class="card" id="trades">
+<div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0 section-title"><i class="fas fa-list me-2" style="color:var(--warning)"></i>交易記錄</h5><div class="d-flex gap-2"><input type="text" class="form-control form-control-sm w-auto" id="searchInput" placeholder="搜尋交易..."><select class="form-select form-select-sm w-auto" id="filterSymbol" onchange="filterTrades()"><option value="">全部品種</option></select><select class="form-select form-select-sm w-auto" id="filterResult" onchange="filterTrades()"><option value="">全部結果</option><option value="win">僅獲利</option><option value="loss">僅虧損</option></select><button class="btn btn-danger btn-sm" onclick="clearAllTrades()"><i class="fas fa-trash me-1"></i> 清除全部</button></div></div>
+<div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-hover mb-0">
+<thead><tr><th class="text-center" style="width:50px">#</th><th>日期</th><th>品種</th><th>方向</th><th>類型</th><th class="text-end">進場</th><th class="text-end">出场</th><th class="text-end">止損</th><th class="text-end">盈虧</th><th class="text-center">盈虧比</th><th class="text-center">圖片</th><th class="text-center">操作</th></tr></thead>
+<tbody id="tradesList"></tbody>
+</table>
+</div>
+<div id="noTrades" class="text-center py-5"><i class="fas fa-inbox fa-4x mb-3" style="color:var(--light-dim)"></i><h5 style="color:var(--light-muted)">尚無交易記錄</h5><p style="color:var(--light-dim)">新增您的第一筆交易吧！</p></div>
+</div>
+</div>
+<div class="card mt-4" id="statistics">
+<div class="card-header"><h5 class="mb-0 section-title"><i class="fas fa-chart-bar me-2" style="color:var(--info)"></i>進階統計分析</h5></div>
+<div class="card-body">
+<div class="row g-4"><div class="col-md-6"><div class="chart-container" style="height:300px"><canvas id="monthlyChart"></canvas></div></div><div class="col-md-6"><div class="chart-container" style="height:300px"><canvas id="symbolChart"></canvas></div></div></div>
+<div class="row mt-4"><div class="col-12"><h6 class="mb-3 section-title">風險調整後收益指標</h6></div>
+<div class="col-md-3"><div class="p-3 rounded"><p style="color:var(--light-muted)" class="small mb-1">索提諾比率 (Sortino)</p><h4 class="mb-0" id="sortinoRatio">0.00</h4></div></div>
+<div class="col-md-3"><div class="p-3 rounded"><p style="color:var(--light-muted)" class="small mb-1">卡爾馬比率 (Calmar)</p><h4 class="mb-0" id="calmarRatio">0.00</h4></div></div>
+<div class="col-md-3"><div class="p-3 rounded"><p style="color:var(--light-muted)" class="small mb-1">勝率</p><h4 class="mb-0" id="winRateStat">0%</h4></div></div>
+<div class="col-md-3"><div class="p-3 rounded"><p style="color:var(--light-muted)" class="small mb-1">平均持有時間</p><h4 class="mb-0" id="avgHoldingTime">N/A</h4></div></div>
+</div>
+</div>
+</div>
+<div class="card mt-4" id="tradeDetails">
+<div class="card-header d-flex justify-content-between align-items-center"><h5 class="mb-0 section-title"><i class="fas fa-images me-2" style="color:var(--primary)"></i>交易詳情</h5><div class="d-flex gap-2"><select class="form-select form-select-sm w-auto" id="detailFilterSymbol" onchange="renderTradeDetails()"><option value="">全部品種</option></select><select class="form-select form-select-sm w-auto" id="detailFilterResult" onchange="renderTradeDetails()"><option value="">全部結果</option><option value="win">僅獲利</option><option value="loss">僅虧損</option></select></div></div>
+<div class="card-body">
+<div id="noTradeDetails" class="text-center py-5"><i class="fas fa-images fa-4x mb-3" style="color:var(--light-dim)"></i><h5 style="color:var(--light-muted)">尚無交易詳情</h5></div>
+<div id="tradeDetailsList"></div>
+</div>
+</div>
+</div>
+<div class="modal fade" id="imageModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">交易截圖</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><img id="modalImage" src="" alt="" class="img-fluid"></div></div></div></div>
+<div class="modal fade" id="deleteModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:var(--danger)"><i class="fas fa-exclamation-triangle me-2"></i>確認刪除</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>確定要刪除這筆交易記錄嗎？此操作無法撤銷。</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-danger" id="confirmDelete">確認刪除</button></div></div></div></div>
+<div class="modal fade" id="importModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:var(--primary)"><i class="fas fa-file-import me-2"></i>選擇導入方式</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="mb-3">請選擇資料導入方式：</p><div class="d-grid gap-2"><button type="button" class="btn btn-primary" onclick="processImport('replace')"><i class="fas fa-exchange-alt me-2"></i>替換現有資料</button><button type="button" class="btn btn-secondary" onclick="processImport('merge')"><i class="fas fa-object-group me-2"></i>合併資料</button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button></div></div></div></div>
+<div class="modal fade" id="withdrawalModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:var(--danger)"><i class="fas fa-arrow-right me-2"></i>出金</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">出金金額 ($)</label><input type="number" step="0.01" class="form-control" id="withdrawalAmount" placeholder="請輸入出金金額"></div><div class="mb-3"><label class="form-label">出金日期</label><input type="date" class="form-control" id="withdrawalDate"></div><div class="mb-3"><label class="form-label">備註</label><input type="text" class="form-control" id="withdrawalNote" placeholder="出金原因..."></div><div id="withdrawalHistory"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-danger" onclick="processWithdrawal()"><i class="fas fa-check me-1"></i>出金</button><button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="resetWithdrawals()"><i class="fas fa-redo me-1"></i>重置出金</button></div></div></div></div>
+<div class="modal fade" id="resetConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:var(--warning)"><i class="fas fa-exclamation-triangle me-2"></i>確認重置</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>確定要重置所有資料嗎？</p><p class="text-muted small">這將清除：交易記錄、出金記錄，並重置本金為 $100,000</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-danger" onclick="confirmReset()"><i class="fas fa-check me-1"></i>確認重置</button></div></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let trades=JSON.parse(localStorage.getItem('trades'))||[];
+let withdrawals=JSON.parse(localStorage.getItem('withdrawals'))||[];
+let initialBalance=parseFloat(localStorage.getItem('initialBalance'))||100000;
+let pendingImportData=null,deleteIndex=null;
+let equityChart,winLossChart,monthlyChart,symbolChart;
+let uploadedImages=[];
+document.addEventListener('DOMContentLoaded',()=>{
+document.getElementById('tradeDate').valueAsDate=new Date();
+document.getElementById('withdrawalDate').valueAsDate=new Date();
+document.getElementById('initialBalance').value=initialBalance;
+initCharts();renderTrades();renderTradeDetails();updateStatistics();
+document.getElementById('tradeForm').addEventListener('submit',handleFormSubmit);
+document.getElementById('searchInput').addEventListener('input',filterTrades);
+setupDragAndDrop();
+});
+function updateInitialBalance(){initialBalance=parseFloat(document.getElementById('initialBalance').value)||100000;localStorage.setItem('initialBalance',initialBalance);updateStatistics();showToast('本金已更新為 $'+initialBalance.toLocaleString(),'success')}
+function initCharts(){
+equityChart=new Chart(document.getElementById('equityChart').getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'餘額 (含出金)',data:[],borderColor:'#8BA4B8',backgroundColor:'rgba(139,164,184,0.1)',fill:true,tension:0.4},{label:'Equity',data:[],borderColor:'#8FAF8F',backgroundColor:'rgba(143,175,143,0.1)',fill:true,tension:0.4},{label:'真實餘額',data:[],borderColor:'#EF4444',backgroundColor:'transparent',borderDash:[5,5],tension:0.4,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#C8C4BC'}}},scales:{x:{ticks:{color:'#9B9590'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#9B9590'},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+winLossChart=new Chart(document.getElementById('winLossChart').getContext('2d'),{type:'doughnut',data:{labels:['獲利','虧損'],datasets:[{data:[0,0],backgroundColor:['#8FAF8F','#C49B9B'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#C8C4BC'}}}}});
+monthlyChart=new Chart(document.getElementById('monthlyChart').getContext('2d'),{type:'bar',data:{labels:[],datasets:[{label:'月盈虧',data:[],backgroundColor:[],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#C8C4BC'}}},scales:{x:{ticks:{color:'#9B9590'},grid:{display:false}},y:{ticks:{color:'#9B9590'},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+symbolChart=new Chart(document.getElementById('symbolChart').getContext('2d'),{type:'bar',data:{labels:[],datasets:[{label:'交易次數',data:[],backgroundColor:['rgba(139,164,184,0.8)','rgba(143,175,143,0.8)','rgba(196,180,155,0.8)','rgba(196,155,155,0.8)','rgba(168,155,196,0.8)'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{labels:{color:'#C8C4BC'}}},scales:{x:{ticks:{color:'#9B9590'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#9B9590'},grid:{display:false}}}}});
+}
+function updateChartVisibility(){const show=document.getElementById('showRealBalance').checked;equityChart.data.datasets[2].hidden=!show;equityChart.update()}
+function autoCalculate(){
+const entry=parseFloat(document.getElementById('entryPrice').value);
+const exit=parseFloat(document.getElementById('exitPrice').value);
+const sl=parseFloat(document.getElementById('stopLoss').value);
+const dirSelect=document.getElementById('direction');
+if(entry&&sl){dirSelect.value=sl>entry?'short':'long'}
+if(entry&&exit&&sl){
+const priceRisk=Math.abs(entry-sl);
+const priceProfit=Math.abs(exit-entry);
+if(priceRisk===0){document.getElementById('riskRewardRatio').value='0R';document.getElementById('riskRewardRatio').className='form-control';return}
+const rr=priceProfit/priceRisk;
+const isWin=(dirSelect.value==='long')?(exit>entry):(exit<entry);
+document.getElementById('riskRewardRatio').value=(isWin?'+':'')+rr.toFixed(2)+'R';
+document.getElementById('riskRewardRatio').className='form-control '+(isWin?'rr-positive':'rr-negative');
+}}
+function showWithdrawalModal(){renderWithdrawalHistory();new bootstrap.Modal(document.getElementById('withdrawalModal')).show()}
+function renderWithdrawalHistory(){
+const c=document.getElementById('withdrawalHistory');
+if(withdrawals.length===0){c.innerHTML='<small class="text-muted">尚無出金記錄</small>';return}
+c.innerHTML='<div class="d-flex justify-content-between mb-2"><span class="text-muted">出金歷史</span><span class="fw-bold" style="color:var(--loss)">總出金: $'+withdrawals.reduce((s,w)=>s+w.amount,0).toLocaleString()+'</span></div>'+withdrawals.slice().reverse().map((w,i)=>`<div class="withdrawal-item"><div><span style="color:var(--loss)">-$${w.amount.toLocaleString()}</span><small class="text-muted ms-2">${w.date}${w.note?' - '+w.note:''}</small></div><i class="fas fa-times delete-withdrawal" onclick="deleteWithdrawal(${withdrawals.length-1-i})"></i></div>`).join('');
+}
+function processWithdrawal(){
+const amt=parseFloat(document.getElementById('withdrawalAmount').value);
+const date=document.getElementById('withdrawalDate').value;
+const note=document.getElementById('withdrawalNote').value;
+if(!amt||amt<=0){showToast('請輸入有效的出金金額','danger');return}
+withdrawals.push({id:Date.now(),amount:amt,date,note});
+localStorage.setItem('withdrawals',JSON.stringify(withdrawals));
+document.getElementById('withdrawalAmount').value='';
+document.getElementById('withdrawalNote').value='';
+renderWithdrawalHistory();
+updateStatistics();
+showToast('出金 $'+amt.toLocaleString()+' 已記錄','success');
+}
+function deleteWithdrawal(index){withdrawals.splice(index,1);localStorage.setItem('withdrawals',JSON.stringify(withdrawals));renderWithdrawalHistory();updateStatistics();showToast('出金記錄已刪除','warning')}
+function resetWithdrawals(){if(confirm('確定要清除所有出金記錄嗎？')){withdrawals=[];localStorage.setItem('withdrawals',JSON.stringify(withdrawals));renderWithdrawalHistory();updateStatistics();showToast('出金記錄已重置','success')}}
+function resetAll(){new bootstrap.Modal(document.getElementById('resetConfirmModal')).show()}
+function confirmReset(){
+trades=[];withdrawals=[];initialBalance=100000;
+document.getElementById('initialBalance').value=initialBalance;
+localStorage.setItem('initialBalance',initialBalance);
+localStorage.setItem('withdrawals',JSON.stringify(withdrawals));
+saveTrades();renderTrades();renderTradeDetails();updateStatistics();
+bootstrap.Modal.getInstance(document.getElementById('resetConfirmModal')).hide();
+showToast('所有資料已重置','success');
+}
+function calculateTradeRR(trade){
+const entry=trade.entryPrice;
+const exit=trade.exitPrice;
+const sl=trade.stopLoss;
+const priceRisk=Math.abs(entry-sl);
+const priceProfit=Math.abs(exit-entry);
+if(priceRisk===0)return{value:'0R',class:'rr-positive'};
+const rr=priceProfit/priceRisk;
+const isWin=trade.pnl>=0;
+return{value:(isWin?'+':'')+rr.toFixed(2)+'R',class:isWin?'rr-positive':'rr-negative'};
+}
+function handleFormSubmit(e){
+e.preventDefault();
+const entryPrice=parseFloat(document.getElementById('entryPrice').value);
+const exitPrice=parseFloat(document.getElementById('exitPrice').value);
+const stopLoss=parseFloat(document.getElementById('stopLoss').value);
+const positionSize=parseFloat(document.getElementById('positionSize').value);
+const leverage=parseFloat(document.getElementById('leverage').value)||1;
+let direction=stopLoss>entryPrice?'short':'long';
+let pnl=direction==='long'?(exitPrice-entryPrice)*positionSize*leverage:(entryPrice-exitPrice)*positionSize*leverage;
+const rrInfo=calculateTradeRR({entryPrice,exitPrice,stopLoss,pnl});
+const trade={id:Date.now(),symbol:document.getElementById('symbol').value,direction,tradeType:document.getElementById('tradeType').value,date:document.getElementById('tradeDate').value,entryTime:document.getElementById('entryTime').value,exitTime:document.getElementById('exitTime').value,entryPrice,exitPrice,stopLoss,positionSize,leverage,pnl,riskRewardRatio:rrInfo.value,notes:document.getElementById('notes').value,images:uploadedImages.slice()};
+trades.push(trade);saveTrades();renderTrades();renderTradeDetails();updateStatistics();updateFilterOptions();resetForm();showToast('交易記錄已儲存！','success');
+}
+function renderTrades(){
+const tbody=document.getElementById('tradesList');
+const noTrades=document.getElementById('noTrades');
+let filteredTrades=[...trades];
+const search=document.getElementById('searchInput').value.toLowerCase();
+const filterSymbol=document.getElementById('filterSymbol').value;
+const filterResult=document.getElementById('filterResult').value;
+if(search)filteredTrades=filteredTrades.filter(t=>t.symbol.toLowerCase().includes(search)||t.notes.toLowerCase().includes(search));
+if(filterSymbol)filteredTrades=filteredTrades.filter(t=>t.symbol===filterSymbol);
+if(filterResult==='win')filteredTrades=filteredTrades.filter(t=>t.pnl>0);
+else if(filterResult==='loss')filteredTrades=filteredTrades.filter(t=>t.pnl<0);
+filteredTrades.sort((a,b)=>new Date(b.date)-new Date(a.date));
+if(filteredTrades.length===0){tbody.innerHTML='';noTrades.style.display='block';return}
+noTrades.style.display='none';
+tbody.innerHTML=filteredTrades.map((trade)=>{
+const idx=trades.indexOf(trade);
+const rrInfo=calculateTradeRR(trade);
+const isWin=trade.pnl>=0;
+const imgCount=trade.images?trade.images.length:0;
+return`<tr><td class="text-center" style="color:var(--light-muted)">${idx+1}</td><td><div style="color:#FFFFFF">${trade.date}</div><small style="color:var(--light-muted)">${trade.entryTime?trade.entryTime+' - '+(trade.exitTime||'--'):''}</small></td><td><span class="badge" style="background:var(--border-color);color:#FFFFFF">${trade.symbol}</span></td><td><span class="badge ${isWin?'badge-win':'badge-loss'}">${isWin?'多':'空'}</span></td><td><small>${trade.tradeType}</small></td><td class="text-end">${trade.entryPrice.toLocaleString()}</td><td class="text-end">${trade.exitPrice.toLocaleString()}</td><td class="text-end">${trade.stopLoss?trade.stopLoss.toLocaleString():'-'}</td><td class="text-end fw-bold" style="color:${isWin?'var(--profit)':'var(--loss)'}">${isWin?'+':''}$${trade.pnl.toFixed(2)}</td><td class="text-center"><span class="ratio-display ${rrInfo.class}">${rrInfo.value}</span></td><td class="text-center">${imgCount>0?`<span class="badge" style="background:var(--primary);color:#1E222C"><i class="fas fa-images me-1"></i>${imgCount}</span>`:'<span style="color:var(--light-muted)">-</span>'}</td><td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(${idx})"><i class="fas fa-trash"></i></button></td></tr>`}).join('');
+updateFilterOptions();
+}
+function renderTradeDetails(){
+const container=document.getElementById('tradeDetailsList');
+const noDetails=document.getElementById('noTradeDetails');
+let filteredTrades=[...trades];
+const filterSymbol=document.getElementById('detailFilterSymbol')?.value||'';
+const filterResult=document.getElementById('detailFilterResult')?.value||'';
+if(filterSymbol)filteredTrades=filteredTrades.filter(t=>t.symbol===filterSymbol);
+if(filterResult==='win')filteredTrades=filteredTrades.filter(t=>t.pnl>0);
+else if(filterResult==='loss')filteredTrades=filteredTrades.filter(t=>t.pnl<0);
+filteredTrades.sort((a,b)=>new Date(a.date)-new Date(b.date));
+if(filteredTrades.length===0){container.innerHTML='';noDetails.style.display='block';updateDetailFilterOptions();return}
+noDetails.style.display='none';
+container.innerHTML=filteredTrades.map((trade)=>{
+const isWin=trade.pnl>=0;
+const actualIndex=trades.indexOf(trade)+1;
+const rrInfo=calculateTradeRR(trade);
+const holdingTime=calculateHoldingTime(trade);
+const images=trade.images||[];
+return`<div class="trade-detail-card ${isWin?'win':'loss'}">
+<div class="row">
+<div class="col-md-2 col-lg-1 d-flex flex-column align-items-center">
+<div class="order-number ${isWin?'win':'loss'}">${actualIndex}</div>
+<div class="mt-2 text-center"><small style="color:var(--light-muted)">第${actualIndex}單</small></div>
+<div class="mt-2"><span class="badge ${isWin?'badge-win':'badge-loss'}">${isWin?'多':'空'}</span></div>
+<div class="mt-2"><span class="badge" style="background:var(--border-color);color:#FFFFFF">${trade.symbol}</span></div>
+</div>
+<div class="col-md-5 col-lg-6">
+<div class="row g-2">
+<div class="col-6"><div class="price-box entry"><div class="price-label"><i class="fas fa-arrow-down me-1"></i>進場點</div><div class="price-value">${trade.entryPrice.toLocaleString()}</div>${trade.entryTime?`<div class="price-sub">${trade.entryTime}</div>`:''}</div></div>
+<div class="col-6"><div class="price-box exit"><div class="price-label"><i class="fas fa-arrow-up me-1"></i>出场點</div><div class="price-value">${trade.exitPrice.toLocaleString()}</div>${trade.exitTime?`<div class="price-sub">${trade.exitTime}</div>`:''}</div></div>
+<div class="col-6"><div class="price-box sl"><div class="price-label"><i class="fas fa-stop me-1"></i>止損</div><div class="price-value" style="color:var(--loss)">${trade.stopLoss?trade.stopLoss.toLocaleString():'-'}</div></div></div>
+<div class="col-6"><div class="price-box pos"><div class="price-label"><i class="fas fa-cubes me-1"></i>倉位</div><div class="price-value">${trade.positionSize}</div>${trade.leverage>1?`<div class="price-sub">${trade.leverage}x</div>`:''}</div></div>
+</div>
+</div>
+<div class="col-md-5 col-lg-5">
+<div class="row g-2">
+<div class="col-6 mb-2"><div class="price-box" style="background:${isWin?'rgba(143,175,143,.15)':'rgba(196,155,155,.15)'};border-color:${isWin?'rgba(143,175,143,.3)':'rgba(196,155,155,.3)'}"><div class="price-label"><i class="fas fa-chart-line me-1"></i>盈虧</div><div class="price-value" style="color:${isWin?'var(--profit)':'var(--loss)'}">${isWin?'+':''}$${trade.pnl.toFixed(2)}</div></div></div>
+<div class="col-6 mb-2"><div class="price-box" style="background:${isWin?'rgba(143,175,143,.15)':'rgba(196,155,155,.15)'};border-color:${isWin?'rgba(143,175,143,.3)':'rgba(196,155,155,.3)'}"><div class="price-label"><i class="fas fa-balance-scale me-1"></i>盈虧比</div><div class="price-value ${rrInfo.class}">${rrInfo.value}</div></div></div>
+<div class="col-6 mb-2"><div class="price-box"><div class="price-label"><i class="fas fa-clock me-1"></i>持有時間</div><div class="price-value" style="font-size:.95rem">${holdingTime}</div></div></div>
+<div class="col-6 mb-2"><div class="price-box"><div class="price-label"><i class="fas fa-calendar me-1"></i>交易類型</div><div class="price-value" style="font-size:.95rem">${trade.tradeType}</div></div></div>
+<div class="col-12"><div class="gallery-images">${images.length>0?images.map(img=>`<img src="${img}" class="trade-screenshot" onclick="showImageModal('${img}')">`).join(''):`<div class="text-center p-3" style="color:var(--light-dim)"><i class="fas fa-image fa-2x mb-2"></i><p class="mb-0 small">無截圖</p></div>`}</div></div>
+</div>
+</div>
+</div>
+${trade.notes?`<div class="mt-3"><div class="notes-box"><div class="d-flex align-items-start"><i class="fas fa-sticky-note me-2 mt-1" style="color:var(--primary)"></i><div>${trade.notes}</div></div></div></div>`:''}
+</div>`}).join('');
+updateDetailFilterOptions();
+}
+function calculateHoldingTime(trade){
+if(!trade.date)return'N/A';
+const entryDate=new Date(trade.date);
+let exitDate=new Date(trade.date);
+if(trade.entryTime&&trade.exitTime){
+const[eh,em]=trade.entryTime.split(':').map(Number);
+const[xh,xm]=trade.exitTime.split(':').map(Number);
+entryDate.setHours(eh||0,em||0);
+exitDate.setHours(xh||0,xm||0);
+if(exitDate<entryDate)exitDate.setDate(exitDate.getDate()+1);
+const diffMs=exitDate-entryDate;
+const hours=Math.floor(diffMs/(1000*60*60));
+const mins=Math.floor((diffMs%(1000*60*60))/(1000*60));
+if(hours>=24){const days=Math.floor(hours/24);return`${days}天 ${hours%24}小時`}else if(hours>0)return`${hours}小時 ${mins}分`;else return`${mins}分鐘`;
+}else{const today=new Date();today.setHours(0,0,0,0);const diffDays=Math.ceil((today-entryDate)/(1000*60*60*24));return diffDays<=0?'當日':diffDays===1?'1天':`${diffDays}天`;}
+}
+function updateFilterOptions(){const symbols=[...new Set(trades.map(t=>t.symbol))];const fs=document.getElementById('filterSymbol');const cv=fs.value;fs.innerHTML='<option value="">全部品種</option>'+symbols.map(s=>`<option value="${s}" ${s===cv?'selected':''}>${s}</option>`).join('')}
+function updateDetailFilterOptions(){const symbols=[...new Set(trades.map(t=>t.symbol))];const fs=document.getElementById('detailFilterSymbol');const cv=fs?.value||'';if(fs)fs.innerHTML='<option value="">全部品種</option>'+symbols.map(s=>`<option value="${s}" ${s===cv?'selected':''}>${s}</option>`).join('')}
+function filterTrades(){renderTrades()}
+function updateStatistics(){
+const totalPnL=trades.reduce((s,t)=>s+t.pnl,0);
+const totalWithdrawals=withdrawals.reduce((s,w)=>s+w.amount,0);
+const currentBalance=initialBalance+totalPnL-totalWithdrawals;
+document.getElementById('totalBalance').textContent='$'+currentBalance.toLocaleString();
+document.getElementById('totalBalance').style.color=currentBalance>=initialBalance?'var(--profit)':'var(--loss)';
+document.getElementById('totalWithdrawals').textContent='$'+totalWithdrawals.toLocaleString();
+const wins=trades.filter(t=>t.pnl>0);
+const losses=trades.filter(t=>t.pnl<0);
+const winRate=trades.length>0?(wins.length/trades.length*100).toFixed(1):'0.0';
+const totalWins=wins.reduce((s,t)=>s+t.pnl,0);
+const totalLosses=Math.abs(losses.reduce((s,t)=>s+t.pnl,0));
+const avgWin=wins.length>0?totalWins/wins.length:0;
+const avgLoss=losses.length>0?totalLosses/losses.length:0;
+const avgRR=avgLoss>0?avgWin/avgLoss:0;
+const expectancy=(winRate/100*avgWin)-((100-winRate)/100*avgLoss);
+const profitFactor=totalLosses>0?(totalWins/totalLosses).toFixed(2):totalWins>0?'∞':'0.00';
+document.getElementById('totalPnL').textContent=`${totalPnL>=0?'+':''}$${totalPnL.toFixed(2)}`;
+document.getElementById('totalPnL').style.color=totalPnL>=0?'var(--profit)':'var(--loss)';
+document.getElementById('pnlPercent').textContent=`${((totalPnL/initialBalance)*100).toFixed(2)}%`;
+document.getElementById('winRate').textContent=`${winRate}%`;
+document.getElementById('winLossCount').textContent=`${wins.length}勝 ${losses.length}敗`;
+document.getElementById('avgRiskReward').textContent=avgRR.toFixed(2)+'R';
+document.getElementById('avgRiskReward').style.color=avgRR>=1?'var(--profit)':'var(--loss)';
+document.getElementById('totalTrades').textContent=trades.length;
+document.getElementById('avgWin').textContent=`$${avgWin.toFixed(2)}`;
+document.getElementById('avgLoss').textContent=`$${avgLoss.toFixed(2)}`;
+document.getElementById('expectancy').textContent=`$${expectancy.toFixed(2)}`;
+document.getElementById('expectancy').style.color=expectancy>=0?'var(--profit)':'var(--loss)';
+document.getElementById('expectancyBar').style.width=`${Math.min(100,Math.max(0,50+expectancy/10))}%`;
+document.getElementById('expectancyBar').style.background=expectancy>=0?'var(--success)':'var(--danger)';
+document.getElementById('profitFactor').textContent=profitFactor;
+const streaks=calculateStreaks(trades);
+document.getElementById('maxWinStreak').textContent=streaks.maxWin;
+document.getElementById('maxLossStreak').textContent=streaks.maxLoss;
+document.getElementById('totalWins').textContent=wins.length;
+document.getElementById('totalLosses').textContent=losses.length;
+// 夏普比率
+const sharpe=calculateSharpeRatio(trades.map(t=>t.pnl));
+document.getElementById('sharpeRatio').textContent=sharpe.toFixed(2);
+document.getElementById('sortinoRatio').textContent=calculateSortinoRatio(trades.map(t=>t.pnl)).toFixed(2);
+document.getElementById('calmarRatio').textContent=calculateCalmarRatio(trades.map(t=>t.pnl),initialBalance,totalPnL).toFixed(2);
+document.getElementById('winRateStat').textContent=`${winRate}%`;
+document.getElementById('avgHoldingTime').textContent=calculateAvgHoldingTime(trades);
+const maxDD=calculateMaxDrawdown(trades.map(t=>t.pnl),initialBalance);
+document.getElementById('maxDrawdown').textContent=`最大回撤: ${maxDD.toFixed(2)}%`;
+updateCharts(trades,wins.length,losses.length,totalPnL);
+}
+function updateCharts(sortedTrades,wins,losses,totalPnL){
+const labels=['初始'];
+const balance=[initialBalance];
+const equity=[initialBalance];
+const realBalance=[initialBalance];
+sortedTrades.forEach(t=>{labels.push(t.date);balance.push(balance[balance.length-1]+t.pnl);equity.push(equity[equity.length-1]+t.pnl)});
+if(withdrawals.length>0){sortedTrades.forEach((t,i)=>{const wBefore=withdrawals.filter(w=>new Date(w.date)<=new Date(t.date));const totalW=wBefore.reduce((s,w)=>s+w.amount,0);realBalance[i+1]=equity[i+1]-totalW})}
+equityChart.data.labels=labels;
+equityChart.data.datasets[0].data=balance;
+equityChart.data.datasets[1].data=equity;
+equityChart.data.datasets[2].data=realBalance;
+equityChart.update();
+winLossChart.data.datasets[0].data=[wins,losses];
+winLossChart.update();
+const monthlyData={};
+sortedTrades.forEach(t=>{const m=t.date.substring(0,7);if(!monthlyData[m])monthlyData[m]=0;monthlyData[m]+=t.pnl});
+const months=Object.keys(monthlyData).sort();
+const monthValues=months.map(m=>monthlyData[m]);
+monthlyChart.data.labels=months;
+monthlyChart.data.datasets[0].data=monthValues;
+monthlyChart.data.datasets[0].backgroundColor=monthValues.map(v=>v>=0?'rgba(143,175,143,0.8)':'rgba(196,155,155,0.8)');
+monthlyChart.update();
+const symbolData={};
+trades.forEach(t=>{if(!symbolData[t.symbol])symbolData[t.symbol]=0;symbolData[t.symbol]++});
+const symbols=Object.keys(symbolData).sort((a,b)=>symbolData[b]-symbolData[a]);
+symbolChart.data.labels=symbols;
+symbolChart.data.datasets[0].data=symbols.map(s=>symbolData[s]);
+symbolChart.update();
+}
+function updateChart(period){document.querySelectorAll('.btn-group button').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');updateStatistics()}
+function calculateSharpeRatio(returns){if(returns.length<2)return 0;const avg=returns.reduce((a,b)=>a+b,0)/returns.length;const variance=returns.reduce((s,r)=>s+Math.pow(r-avg,2),0)/returns.length;const stdDev=Math.sqrt(variance);return stdDev>0?(avg/stdDev)*Math.sqrt(252):0}
+function calculateSortinoRatio(returns){if(returns.length<2)return 0;const avg=returns.reduce((a,b)=>a+b,0)/returns.length;const negReturns=returns.filter(r=>r<0);if(negReturns.length===0)return avg>0?999:0;const downside=negReturns.reduce((s,r)=>s+Math.pow(r,2),0)/returns.length;return Math.sqrt(downside)>0?(avg/Math.sqrt(downside))*Math.sqrt(252):0}
+function calculateCalmarRatio(returns,initial,totalPnL){if(returns.length<2)return 0;const maxDD=calculateMaxDrawdown(returns,initial);if(maxDD===0)return totalPnL>0?999:0;return isFinite(totalPnL/(maxDD/100*initial))?totalPnL/(maxDD/100*initial):0}
+function calculateMaxDrawdown(returns,initial){let peak=initial,maxDD=0,equity=initial;for(const pnl of returns){equity+=pnl;if(equity>peak)peak=equity;const dd=(peak-equity)/peak*100;if(dd>maxDD)maxDD=dd}return maxDD}
+function calculateStreaks(sortedTrades){let cws=0,cls=0,mws=0,mls=0;sortedTrades.forEach(t=>{if(t.pnl>0){cws++;cls=0;mws=Math.max(mws,cws)}else if(t.pnl<0){cls++;cws=0;mls=Math.max(mls,cls)}});return{maxWin:mws,maxLoss:mls}}
+function calculateAvgHoldingTime(trades){if(trades.length===0)return'N/A';let totalMs=0,count=0;trades.forEach(t=>{if(t.entryTime&&t.exitTime&&t.date){const ed=new Date(t.date);const xd=new Date(t.date);const[eh,em]=t.entryTime.split(':').map(Number);const[xh,xm]=t.exitTime.split(':').map(Number);ed.setHours(eh||0,em||0);xd.setHours(xh||0,xm||0);if(xd<ed)xd.setDate(xd.getDate()+1);totalMs+=(xd-ed);count++}else{totalMs+=24*60*60*1000;count++}});const avgMs=totalMs/count;const hours=avgMs/(1000*60*60);if(hours>=24){const days=Math.floor(hours/24);return`${days}天 ${Math.round(hours%24)}小時`}else if(hours>=1)return`${hours.toFixed(1)}小時`;else return`${Math.round(avgMs/(1000*60))}分鐘`}
+function handleImageUpload(event){const files=event.target.files;if(files.length>0){Array.from(files).forEach(file=>{const reader=new FileReader();reader.onload=function(e){uploadedImages.push(e.target.result);renderImagePreview()};reader.readAsDataURL(file)})}}
+function renderImagePreview(){const container=document.getElementById('imagePreview');container.innerHTML=uploadedImages.map((img,i)=>`<div class="image-thumb"><img src="${img}" alt=""><span class="remove-img" onclick="removeImage(${i})"><i class="fas fa-times"></i></span></div>`).join('')}
+function removeImage(index){uploadedImages.splice(index,1);renderImagePreview()}
+function setupDragAndDrop(){const uz=document.getElementById('uploadZone');['dragenter','dragover','dragleave','drop'].forEach(en=>{uz.addEventListener(en,e=>{e.preventDefault();e.stopPropagation()},false)});['dragenter','dragover'].forEach(en=>{uz.addEventListener(en,()=>uz.classList.add('dragover'))});['dragleave','drop'].forEach(en=>{uz.addEventListener(en,()=>uz.classList.remove('dragover'))});uz.addEventListener('drop',e=>{const files=e.dataTransfer.files;if(files.length>0){Array.from(files).forEach(file=>{if(file.type.startsWith('image/')){const reader=new FileReader();reader.onload=function(ev){uploadedImages.push(ev.target.result);renderImagePreview()};reader.readAsDataURL(file)}})}})}
+function showImageModal(src){document.getElementById('modalImage').src=src;new bootstrap.Modal(document.getElementById('imageModal')).show()}
+function confirmDelete(index){deleteIndex=index;new bootstrap.Modal(document.getElementById('deleteModal')).show()}
+document.getElementById('confirmDelete').addEventListener('click',function(){if(deleteIndex!==null){trades.splice(deleteIndex,1);saveTrades();renderTrades();renderTradeDetails();updateStatistics();updateFilterOptions();bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();showToast('交易記錄已刪除','warning');deleteIndex=null}})
+function clearAllTrades(){if(confirm('確定要清除所有交易記錄嗎？此操作無法撤銷。')){trades=[];saveTrades();renderTrades();renderTradeDetails();updateStatistics();showToast('所有交易記錄已清除','warning')}}
+function saveTrades(){localStorage.setItem('trades',JSON.stringify(trades))}
+function triggerImport(){document.getElementById('importFileInput').click()}
+function handleImportFile(event){const file=event.target.files[0];if(!file)return;if(!file.name.endsWith('.json')){showToast('請選擇 JSON 格式的檔案','danger');event.target.value='';return}const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);let arr;if(Array.isArray(data))arr=data;else if(Array.isArray(data.trades))arr=data.trades;else{showToast('檔案格式錯誤','danger');return}pendingImportData=data;new bootstrap.Modal(document.getElementById('importModal')).show()}catch(err){showToast('檔案讀取失敗','danger')}};reader.readAsText(file);event.target.value=''}
+function processImport(mode){if(!pendingImportData){showToast('沒有待導入的資料','danger');return}let arr;if(Array.isArray(pendingImportData))arr=pendingImportData;else arr=pendingImportData.trades||[];if(mode==='replace'){trades=arr;if(pendingImportData.initialBalance){initialBalance=pendingImportData.initialBalance;document.getElementById('initialBalance').value=initialBalance;localStorage.setItem('initialBalance',initialBalance)}if(pendingImportData.withdrawals){withdrawals=pendingImportData.withdrawals;localStorage.setItem('withdrawals',JSON.stringify(withdrawals))}showToast(`已成功導入 ${arr.length} 筆交易記錄`,'success')}else{const ids=new Set(trades.map(t=>t.id));let added=0;arr.forEach(t=>{if(!ids.has(t.id)){trades.push(t);added++}});if(pendingImportData.withdrawals){const wids=new Set(withdrawals.map(w=>w.id));pendingImportData.withdrawals.forEach(w=>{if(!wids.has(w.id))withdrawals.push(w)});localStorage.setItem('withdrawals',JSON.stringify(withdrawals))}showToast(`成功合併 ${added} 筆新交易`,'success')}saveTrades();renderTrades();renderTradeDetails();updateStatistics();updateFilterOptions();bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();pendingImportData=null}
+function exportData(mode='backup'){const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);const filename=`tradelog_${ts}.json`;const totalPnL=trades.reduce((s,t)=>s+t.pnl,0);const totalWithdrawals=withdrawals.reduce((s,w)=>s+w.amount,0);const obj={version:'2.0',exportTime:new Date().toISOString(),initialBalance,withdrawals,trades,summary:{totalTrades:trades.length,totalPnL,currentBalance:initialBalance+totalPnL-totalWithdrawals,totalWithdrawals,winRate:trades.length>0?((trades.filter(t=>t.pnl>0).length/trades.length)*100).toFixed(2)+'%':'0%'}};const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);if(mode==='replace'){trades=[];withdrawals=[];initialBalance=100000;document.getElementById('initialBalance').value=initialBalance;localStorage.setItem('initialBalance',initialBalance);localStorage.setItem('withdrawals',JSON.stringify(withdrawals));saveTrades();renderTrades();renderTradeDetails();updateStatistics();showToast('資料已匯出並清除本地記錄','success')}else{showToast(`已匯出 ${trades.length} 筆交易記錄`,'success')}}
+function resetForm(){document.getElementById('tradeForm').reset();document.getElementById('tradeDate').valueAsDate=new Date();document.getElementById('leverage').value='1';document.getElementById('direction').value='';document.getElementById('imagePreview').innerHTML='';document.getElementById('riskRewardRatio').value='';uploadedImages=[]}
+function showToast(message,type='info'){const tc=document.getElementById('toastContainer');const t=document.createElement('div');const colors={'success':'var(--success)','danger':'var(--danger)','warning':'var(--warning)','info':'var(--info)'};t.className='toast align-items-center border-0';t.style.backgroundColor=colors[type]||colors.info;t.style.color='#1E222C';t.innerHTML=`<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-dark me-2 m-auto" data-bs-dismiss="toast"></button></div>`;tc.appendChild(t);const bt=new bootstrap.Toast(t);bt.show();t.addEventListener('hidden.bs.toast',()=>t.remove())}
+document.querySelectorAll('.nav-link').forEach(l=>{l.addEventListener('click',function(e){const href=this.getAttribute('href');if(href.startsWith('#')){e.preventDefault();document.querySelector(href).scrollIntoView({behavior:'smooth'});document.querySelectorAll('.nav-link').forEach(ll=>ll.classList.remove('active'));this.classList.add('active')}})});
+</script>
+</body>
+</html>
